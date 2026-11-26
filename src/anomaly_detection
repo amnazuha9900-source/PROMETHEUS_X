@@ -1,0 +1,32 @@
+
+import cv2
+import numpy as np
+from sklearn.ensemble import IsolationForest
+
+def train_detector(normal_images):
+    features = []
+
+    for image in normal_images:
+        image = cv2.resize(image, (64, 64))
+        features.append(image.flatten())
+
+    model = IsolationForest(
+        n_estimators=100,
+        contamination="auto",
+        random_state=42
+    )
+
+    model.fit(np.array(features))
+    return model
+
+def detect_anomaly(model, image):
+    image = cv2.resize(image, (64, 64))
+    features = image.flatten().reshape(1, -1)
+
+    prediction = model.predict(features)[0]
+    score = model.score_samples(features)[0]
+
+    return {
+        "result": "Defect Detected" if prediction == -1 else "Normal",
+        "anomaly_score": float(-score)
+    }
